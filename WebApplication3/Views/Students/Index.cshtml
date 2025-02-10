@@ -1,0 +1,172 @@
+﻿@model IEnumerable<MyAspNetCoreApp.Models.Student>
+
+@{
+    ViewData["Title"] = "Student List";
+}
+
+<h1 class="text-center my-4">Student List</h1>
+
+<!-- Filter Section -->
+<div class="mb-3">
+    <div class="row">
+        <div class="col">
+            <label for="filterFirstName">First Name</label>
+            <input type="text" id="filterFirstName" class="form-control" placeholder="Search First Name">
+        </div>
+        <div class="col">
+            <label for="filterLastName">Last Name</label>
+            <input type="text" id="filterLastName" class="form-control" placeholder="Search Last Name">
+        </div>
+        <div class="col">
+            <label for="filterEmail">Email</label>
+            <input type="text" id="filterEmail" class="form-control" placeholder="Search Email">
+        </div>
+        <div class="col">
+            <label for="filterGender">Gender</label>
+            <select id="filterGender" class="form-control">
+                <option value="">Any</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+            </select>
+        </div>
+        <div class="col">
+            <label for="filterDivision">Division</label>
+            <select id="filterDivision" class="form-control">
+                <option value="">Any</option>
+                <option value="A">A</option>
+                <option value="B">B</option>
+                <option value="C">C</option>
+                <option value="D">D</option>
+                <option value="E">E</option>
+            </select>
+        </div>
+        <div class="col">
+            <label for="filterTeacherName">Teacher Name</label>
+            <select id="filterTeacherName" class="form-control">
+                <option value="">Any</option>
+                @foreach (var teacher in ViewData["Teachers"] as IEnumerable<string>)
+                {
+                    <option value="@teacher">@teacher</option>
+                }
+            </select>
+        </div>
+    </div>
+</div>
+
+<!-- Table Section -->
+<div class="table-responsive">
+    <table class="table table-striped table-hover shadow-lg rounded">
+        <thead class="table-light">
+            <tr>
+                <th id="sortFirstName" class="sortable">First Name</th>
+                <th id="sortLastName" class="sortable">Last Name</th>
+                <th id="sortEmail" class="sortable">Email</th>
+                <th id="sortGender" class="sortable">Gender</th>
+                <th id="sortDateOfBirth" class="sortable">Date of Birth</th>
+                <th id="sortDivision" class="sortable">Division</th>
+                <th id="sortTeacherName" class="sortable">Teacher Name</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="studentTableBody">
+            @foreach (var student in Model)
+            {
+                <tr>
+                    <td>@student.FirstName</td>
+                    <td>@student.LastName</td>
+                    <td>@student.Email</td>
+                    <td>@student.Gender</td>
+                    <td>@student.DateOfBirth.ToShortDateString()</td>
+                    <td>@(student.TeacherDivision ?? "Not Assigned")</td>
+                    <td>@(student.TeacherNames ?? "Not Assigned")</td>
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@student.Id" class="btn btn-info btn-sm">Edit</a>
+                        <a asp-action="Details" asp-route-id="@student.Id" class="btn btn-primary btn-sm">Details</a>
+                        <button type="button" class="btn btn-danger btn-sm delete-btn" data-id="@student.Id" data-name="@student.FirstName @student.LastName" data-toggle="modal" data-target="#deleteModal">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- Existing modal and scripts remain the same -->
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            function fetchStudents() {
+                const params = {
+                    firstName: $('#filterFirstName').val(),
+                    lastName: $('#filterLastName').val(),
+                    email: $('#filterEmail').val(),
+                    gender: $('#filterGender').val(),
+                    division: $('#filterDivision').val(),
+                    selectedTeacherName: $('#filterTeacherName').val()
+                };
+
+                $.ajax({
+                    url: '/api/Students',
+                    method: 'GET',
+                    data: params,
+                    success: function(response) {
+                        if (response.success) {
+                            updateStudentTable(response.data);
+                        } else {
+                            alert(response.errorMessage);
+                        }
+                    },
+                    error: function() {
+                        alert('Failed to fetch students');
+                    }
+                });
+            }
+
+            function updateStudentTable(students) {
+                const tableBody = $('#studentTableBody');
+                tableBody.empty();
+
+                if (students.length === 0) {
+                    tableBody.html('<tr><td colspan="8" class="text-center">No records found</td></tr>');
+                    return;
+                }
+
+                students.forEach(student => {
+                    tableBody.append(`
+                        <tr>
+                            <td>${student.firstName}</td>
+                            <td>${student.lastName}</td>
+                            <td>${student.email}</td>
+                            <td>${student.gender}</td>
+                            <td>${new Date(student.dateOfBirth).toLocaleDateString()}</td>
+                            <td>${student.teacherDivision || 'Not Assigned'}</td>
+                            <td>${student.teacherNames || 'Not Assigned'}</td>
+                            <td>
+                                <a href="/Students/Edit/${student.id}" class="btn btn-info btn-sm">Edit</a>
+                                <a href="/Students/Details/${student.id}" class="btn btn-primary btn-sm">Details</a>
+                                <button type="button" class="btn btn-danger btn-sm delete-btn"
+                                    data-id="${student.id}"
+                                    data-name="${student.firstName} ${student.lastName}"
+                                    data-toggle="modal"
+                                    data-target="#deleteModal">Delete</button>
+                            </td>
+                        </tr>
+                    `);
+                });
+            }
+
+            // Trigger API fetch on filter changes
+            $('input, select').on('input change', fetchStudents);
+
+            // Delete student functionality (existing code)
+            $('.delete-btn').on('click', function () {
+                var studentId = $(this).data('id');
+                var studentName = $(this).data('name');
+                $('#studentName').text(studentName);
+                $('#studentId').val(studentId);
+            });
+        });
+    </script>
+}

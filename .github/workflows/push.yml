@@ -34,11 +34,4 @@ jobs:
       - name: Run unit tests
         run: dotnet test TestProject1/TestProject1.csproj --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx" || true
 
-      - name: Generate Test Report
-        uses: dorny/test-reporter@v1
-        if: always()
-        with:
-          name: .NET Tests
-          path: "**/test-results.trx"
-          reporter: dotnet-trx
-          fail-on-error: true
+

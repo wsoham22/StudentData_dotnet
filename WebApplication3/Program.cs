@@ -9,7 +9,7 @@ using NLog.Web;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Set up NLog configuration from appsettings.json or nlog.config
+// Set up NLog configuration from appsettings.json or nlog.configg
 LogManager.LoadConfiguration("nlog.config");
 
 try

@@ -12,7 +12,7 @@ EXPOSE 5134
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["WebApplication3/WebApplication3.csproj", "WebApplication3/"]
+COPY ["WebApplication3.csproj", "WebApplication3/"]
 RUN dotnet restore "./WebApplication3/WebApplication3.csproj"
 COPY . .
 WORKDIR "/src/WebApplication3"

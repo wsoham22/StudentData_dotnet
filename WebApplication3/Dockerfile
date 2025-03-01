@@ -11,11 +11,11 @@ EXPOSE 5134
 # This stage is used to build the service project
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
-WORKDIR /src
+WORKDIR 
 COPY ["WebApplication3.csproj", "WebApplication3/"]
 RUN dotnet restore "./WebApplication3/WebApplication3.csproj"
 COPY . .
-WORKDIR "/src/WebApplication3"
+WORKDIR "WebApplication3"
 RUN dotnet build "WebApplication3.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 # This stage is used to publish the service project to be copied to the final stage

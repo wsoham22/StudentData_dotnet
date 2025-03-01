@@ -12,7 +12,7 @@ ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 
 # Ensure we copy the solution file correctly
-COPY ["WebApplication3/WebApplication3.sln", "WebApplication3/"]
+COPY ["WebApplication3/WebApplication3.csproj", "WebApplication3/"]
 
 # Restore dependencies using the .sln file instead of .csproj
 WORKDIR "/src/WebApplication3"

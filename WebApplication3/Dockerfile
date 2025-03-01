@@ -17,7 +17,7 @@ RUN dotnet restore "./WebApplication3/WebApplication3.csproj"
 COPY . . 
 
 WORKDIR "/src/WebApplication3"
-RUN dotnet publish "WebApplication3.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "WebApplication3.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=true
 
 # This stage is used in production or when running from VS in regular mode (Default when not using the Debug configuration)
 FROM base AS final

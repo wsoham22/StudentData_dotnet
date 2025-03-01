@@ -15,7 +15,7 @@ WORKDIR /src
 COPY ["WebApplication3.csproj", "WebApplication3/"]
 
 # Restore dependencies using the .sln file instead of .csproj
-WORKDIR "/src/WebApplication3"
+WORKDIR "/src"
 RUN dotnet restore "WebApplication3.sln"
 
 # Copy everything and build the project

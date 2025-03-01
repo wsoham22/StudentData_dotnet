@@ -97,7 +97,7 @@ jobs:
           
        run: |
           
-          cd ManufacturingProject
+          cd WebApplication3
           IFS='-'
           read -a parsed_tag <<< "${{ needs.tagify.outputs.the_tag }}"
           VERSION_ONLY=${parsed_tag[0]}

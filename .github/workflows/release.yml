@@ -3,7 +3,7 @@ name: Containerize
 on:
   push:
     tags:
-      - "v*-dev"
+      - "v*-dev-release"
       - "v*-qa"
 
 permissions:

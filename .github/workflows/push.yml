@@ -86,7 +86,7 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          docker build -t webapplication3 .
+          docker build -t $IMAGE_NAME ./WebApplication3 .
 
       - name: Assign Image Tag (Git SHA)
         run: echo "IMAGE_TAG=$(git rev-parse --short HEAD)" >> $GITHUB_ENV

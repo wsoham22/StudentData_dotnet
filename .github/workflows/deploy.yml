@@ -1,53 +1,99 @@
-name: Deploy to AWS
+name: Deploy to AWS EC2
 
 on:
   push:
     tags:
-      - "v*-qa"
-      - "v*-dev"
+      - "v*-dev-deploy"
 
-permissions:
-  contents: read
-  actions: read
-  checks: write
+  workflow_dispatch:
+    inputs:
+      deploy_version:
+        type: string
+        description: Version to deploy in format vX.Y.Z
+      deploy_environment:
+        type: choice
+        description: Deploy Environment
+        options:
+          - dev
+
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  ECR_REPOSITORY: ${{ secrets.ECR_REPO_NAME }}
+  IMAGE_NAME: webapp3_api
+  EC2_PUBLIC_IP: ${{ secrets.EC2_PUBLIC_IP }}
 
 jobs:
-  deploy:
-    name: Deploy to AWS
+  tagify:
+    name: Get Tag
     runs-on: ubuntu-latest
-    needs: [containerize]
+    outputs:
+      the_tag: ${{ steps.deploy_tag.outputs.TAG_NAME }}
     steps:
-      - uses: actions/checkout@v3
+      - name: Extract Deploy Tag (Push Event)
+        if: github.event_name == 'push'
+        run: |
+          full_tag=${GITHUB_REF#refs/*/}
+          deploy_tag=${full_tag%-deploy}
+          echo "VERSION=${deploy_tag}" >> "$GITHUB_ENV"
 
-      - name: Configure AWS credentials
+      - name: Extract Deploy Tag (Manual Trigger)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          echo "VERSION=${{ github.event.inputs.deploy_version }}-${{ github.event.inputs.deploy_environment }}" >> "$GITHUB_ENV"
+
+      - name: Set Output Variable
+        id: deploy_tag
+        run: |
+          echo "TAG_NAME=${{ env.VERSION }}" >> $GITHUB_OUTPUT
+
+  deploy:
+    name: Deploy to EC2
+    needs: [tagify]
+    runs-on: ubuntu-latest
+    if: endsWith(needs.tagify.outputs.the_tag, 'dev')
+    env:
+      TAG_VERSION: ${{ needs.tagify.outputs.the_tag }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set Up SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/DeploymentKey.pem
+          chmod 600 ~/.ssh/DeploymentKey.pem
+
+      - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_ECR_REGION }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Deploy to AWS ECS
+      - name: Deploy Application on EC2
         env:
-          CLUSTER_NAME: ${{ secrets.AWS_ECS_CLUSTER }}
-          SERVICE_NAME: ${{ secrets.AWS_ECS_SERVICE }}
-          CONTAINER_NAME: "webapp3_api"
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
-          IFS='-'
-          read -a parsed_tag <<< "${{ needs.tagify.outputs.the_tag }}"
-          VERSION_ONLY=${parsed_tag[0]}
-          ENVIRONMENT=${parsed_tag[1]}
-          IFS=' '
-          IMAGE_TAG=$REGISTRY/webapp3_api:${{ needs.tagify.outputs.the_tag }}
-          
-          echo "Deploying image: $IMAGE_TAG"
-          aws ecs update-service --cluster $CLUSTER_NAME --service $SERVICE_NAME \
-            --force-new-deployment
-      
-      - name: Cleanup
-        run: docker logout
-        if: always()
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/DeploymentKey.pem ec2-user@${{ secrets.EC2_PUBLIC_IP }} << 'EOF'
+            set -e
+            echo "Logging into ECR..."
+            aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
+
+            echo "Stopping and removing existing container..."
+            docker stop webapp3_api || true
+            docker rm -f webapp3_api || true
+
+            echo "Pulling latest image..."
+            docker pull ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPO_NAME }}:${{ needs.tagify.outputs.the_tag }}
+
+            echo "Running new container..."
+            docker run -d -p 8080:8080 --name webapp3_api ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPO_NAME }}:${{ needs.tagify.outputs.the_tag }}
+          EOF
+
+      - name: Cleanup SSH Key
+        run: rm -f ~/.ssh/DeploymentKey.pem

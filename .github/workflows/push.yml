@@ -15,7 +15,7 @@ permissions:
 
 env:
   AWS_ECR_REGION: ${{ secrets.AWS_ECR_REGION }}
-  ECR_REPOSITORY: ${{ secrets.REPOSITORY }}
+  ECR_REPOSITORY: ${{ secrets.ECR_REPO_NAME }}
   IMAGE_NAME: webapplication3  # Your Docker image name
 
 jobs:
@@ -93,13 +93,10 @@ jobs:
 
       - name: Tag Docker Image
         run: |
-          docker tag webapplication3:latest ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
-          docker tag webapplication3:latest ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:latest
+          docker tag webapplication3:latest ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:ECR_REPO_NAME
 
       - name: Push Docker Image to ECR
         run: |
           echo "Pushing Docker image with tag: $IMAGE_TAG"
-          docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:ECR_REPO_NAME
 
-          echo "Pushing Docker image with latest tag"
-          docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:latest

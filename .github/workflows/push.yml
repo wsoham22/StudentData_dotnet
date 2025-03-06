@@ -93,7 +93,7 @@ jobs:
 
       - name: Tag Docker Image
         run: |
-          docker tag webapplication3:latest ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:ECR_REPO_NAME
+          docker tag webapplication3 ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:ECR_REPO_NAME
 
       - name: Push Docker Image to ECR
         run: |

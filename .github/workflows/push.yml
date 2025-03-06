@@ -16,7 +16,7 @@ permissions:
 env:
   AWS_ECR_REGION: ${{ secrets.AWS_ECR_REGION }}
   ECR_REPOSITORY: ${{ secrets.REPOSITORY }}
-  IMAGE_NAME: WebApplication3  # Your Docker image name
+  IMAGE_NAME: webapplication3  # Your Docker image name
 
 jobs:
   # 🔍 Debugging GitHub Actions Context

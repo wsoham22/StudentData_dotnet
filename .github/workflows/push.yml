@@ -93,10 +93,10 @@ jobs:
 
       - name: Tag Docker Image
         run: |
-          docker tag webapplication3 ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:ECR_REPO_NAME
+          docker tag webapplication3 ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
 
       - name: Push Docker Image to ECR
         run: |
           echo "Pushing Docker image with tag: $IMAGE_TAG"
-          docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:ECR_REPO_NAME
+          docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
 

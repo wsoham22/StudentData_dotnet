@@ -63,14 +63,6 @@ jobs:
       - name: Run Unit Tests
         run: dotnet test $SOLUTION --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx" || true
 
-      - name: Test Report
-        uses: dorny/test-reporter@v1
-        if: always()
-        with: 
-          name: Dot net Tests
-          path: "**/test-results.trx"
-          reporter: dotnet-trx
-          fail-on-error: true
 
   # 🚀 Push to ECR
   push-to-ecr:

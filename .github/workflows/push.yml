@@ -88,8 +88,8 @@ jobs:
         run: |
           docker build -t webapp3_api -f WebApplication3/Dockerfile WebApplication3
   
-      - name: Assign Image Tag (Git SHA)
-        run: echo "IMAGE_TAG=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+      - name: Assign Image Tag (Git Tag)
+        run: echo "IMAGE_TAG=${{ needs.tagify.outputs.the_tag }}" >> $GITHUB_ENV
 
       - name: Tag Docker Image
         run: |

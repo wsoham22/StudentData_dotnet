@@ -19,7 +19,7 @@ on:
 env:
   AWS_REGION: ${{ secrets.AWS_ECR_REGION }}
   ECR_REPOSITORY: ${{ secrets.ECR_REPO_NAME }}
-  IMAGE_NAME: dotnetapp001
+  IMAGE_NAME: webapp3_api
   EC2_PUBLIC_IP: ${{ secrets.EC2_PUBLIC_IP }}
 
 jobs:

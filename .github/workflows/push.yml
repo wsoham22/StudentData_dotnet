@@ -84,18 +84,18 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v1
 
       - name: Set Repository Name
-        run: echo "ECR_REPO_NAME=webapp3_api" >> $GITHUB_ENV   # ✅ Use ECR_REPO_NAME
+        run: echo "$ECR_REPOSITORY" >> $GITHUB_ENV   # ✅ Use ECR_REPO_NAME
 
       - name: Build Docker Image
         run: |
-          docker build -t webapp3_api -f WebApplication3/Dockerfile WebApplication3
+          docker build -t $ECR_REPOSITORY -f WebApplication3/Dockerfile WebApplication3
 
       - name: Assign Image Tag (Git SHA)
         run: echo "IMAGE_TAG=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
       - name: Tag Docker Image
         run: |
-          docker tag webapp3_api ${{ steps.login-ecr.outputs.registry }}/$ECR_REPO_NAME:$IMAGE_TAG
+          docker tag $ECR_REPOSITORY ${{ steps.login-ecr.outputs.registry }}/$ECR_REPO_NAME:$IMAGE_TAG
 
       - name: Push Docker Image to ECR
         run: |

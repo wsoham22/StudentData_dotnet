@@ -64,44 +64,44 @@ jobs:
         run: dotnet test $SOLUTION --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx" || true
 
 
-  push-to-ecr:
-    needs: build-and-test
-    runs-on: ubuntu-latest
+  # push-to-ecr:
+  #   needs: build-and-test
+  #   runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+  #   steps:
+  #     - name: Checkout Repository
+  #       uses: actions/checkout@v4
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_ECR_REGION }}
+  #     - name: Configure AWS Credentials
+  #       uses: aws-actions/configure-aws-credentials@v2
+  #       with:
+  #         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         aws-region: ${{ secrets.AWS_ECR_REGION }}
 
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
+  #     - name: Login to Amazon ECR
+  #       id: login-ecr
+  #       uses: aws-actions/amazon-ecr-login@v1
 
 
-      - name: Build Docker Image
-        run: |
-          docker build -t $ECR_REPOSITORY -f WebApplication3/Dockerfile WebApplication3
+  #     - name: Build Docker Image
+  #       run: |
+  #         docker build -t $ECR_REPOSITORY -f WebApplication3/Dockerfile WebApplication3
 
-      - name: Assign Image Tag
-        run: |
-          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
-            echo "IMAGE_TAG=${{ github.ref_name }}" >> $GITHUB_ENV
-          else
-            echo "IMAGE_TAG=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
-          fi
+  #     - name: Assign Image Tag
+  #       run: |
+  #         if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+  #           echo "IMAGE_TAG=${{ github.ref_name }}" >> $GITHUB_ENV
+  #         else
+  #           echo "IMAGE_TAG=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+  #         fi
 
-      - name: Tag Docker Image
-        run: |
-          docker tag $ECR_REPOSITORY ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
+  #     - name: Tag Docker Image
+  #       run: |
+  #         docker tag $ECR_REPOSITORY ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
 
-      - name: Push Docker Image to ECR
-        run: |
-          echo "Pushing Docker image to ECR..."
-          docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
+  #     - name: Push Docker Image to ECR
+  #       run: |
+  #         echo "Pushing Docker image to ECR..."
+  #         docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
 

@@ -64,7 +64,6 @@ jobs:
         run: dotnet test $SOLUTION --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx" || true
 
 
-# 🚀 Push to ECR
   push-to-ecr:
     needs: build-and-test
     runs-on: ubuntu-latest
@@ -84,18 +83,22 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
+      - name: Set Repository Name
+        run: echo "ECR_REPO_NAME=webapp3_api" >> $GITHUB_ENV   # ✅ Use ECR_REPO_NAME
+
       - name: Build Docker Image
         run: |
           docker build -t webapp3_api -f WebApplication3/Dockerfile WebApplication3
-  
+
       - name: Assign Image Tag (Git SHA)
         run: echo "IMAGE_TAG=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
       - name: Tag Docker Image
         run: |
-          docker tag webapp3_api ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
+          docker tag webapp3_api ${{ steps.login-ecr.outputs.registry }}/$ECR_REPO_NAME:$IMAGE_TAG
+
       - name: Push Docker Image to ECR
         run: |
-          echo "Pushing Docker image with tag: $IMAGE_TAG"
-          docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "Pushing Docker image to ECR..."
+          docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPO_NAME:$IMAGE_TAG
 
